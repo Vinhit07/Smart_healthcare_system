@@ -1,0 +1,184 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(PATIENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  doctorProfile  DoctorProfile?
+  patientProfile PatientProfile?
+
+  // Doctor relations
+  doctorAppointments  Appointment[]   @relation("DoctorAppointments")
+  doctorPrescriptions Prescription[]  @relation("DoctorPrescriptions")
+
+  // Patient relations
+  patientAppointments  Appointment[]    @relation("PatientAppointments")
+  patientPrescriptions Prescription[]   @relation("PatientPrescriptions")
+  symptomLogs          SymptomLog[]
+  chatSessions         ChatSession[]
+  supportTickets       SupportTicket[]
+
+  @@map("users")
+}
+
+model DoctorProfile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  specialization String
+  experience     Int      // years
+  location       String
+  bio            String?
+  availableSlots Json     // Array of time slots: [{day: "Monday", slots: ["09:00-10:00", "10:00-11:00"]}]
+  rating         Float    @default(0.0)
+  isVerified     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("doctor_profiles")
+}
+
+model PatientProfile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  dateOfBirth    DateTime?
+  bloodGroup     String?
+  allergies      String[] // Array of allergies
+  medicalHistory String?  // Text field for medical history
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("patient_profiles")
+}
+
+model Appointment {
+  id         String            @id @default(uuid())
+  patientId  String
+  doctorId   String
+  date       DateTime
+  timeSlot   String            // e.g., "09:00-10:00"
+  reason     String
+  status     AppointmentStatus @default(PENDING)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  patient       User           @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor        User           @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Cascade)
+  prescriptions Prescription[]
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([date])
+  @@map("appointments")
+}
+
+model Prescription {
+  id             String    @id @default(uuid())
+  patientId      String
+  doctorId       String
+  appointmentId  String?   // Optional link to appointment
+  medicationName String
+  dosage         String
+  frequency      String    // e.g., "Twice daily"
+  startDate      DateTime
+  endDate        DateTime
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  patient     User         @relation("PatientPrescriptions", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor      User         @relation("DoctorPrescriptions", fields: [doctorId], references: [id], onDelete: Cascade)
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@map("prescriptions")
+}
+
+model SymptomLog {
+  id                   String   @id @default(uuid())
+  patientId            String
+  symptoms             String[] // Array of symptoms
+  predictedDisease     String?
+  recommendedSpecialty String?
+  aiResponse           Json?    // Full Grok API response
+  createdAt            DateTime @default(now())
+
+  patient User @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([createdAt])
+  @@map("symptom_logs")
+}
+
+model ChatSession {
+  id        String   @id @default(uuid())
+  patientId String
+  messages  Json     // Array of {role: "user"/"assistant", content: "...", timestamp: "..."}
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patient User @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@map("chat_sessions")
+}
+
+model SupportTicket {
+  id          String   @id @default(uuid())
+  userId      String
+  subject     String
+  message     String
+  status      String   @default("OPEN") // OPEN, IN_PROGRESS, CLOSED
+  response    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("support_tickets")
+}
+
+model FAQ {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  category  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("faqs")
+}
