@@ -73,6 +73,7 @@ const AdminDashboard = () => {
     const [replyText, setReplyText] = useState('');
     const [faqModal, setFaqModal] = useState({ open: false, mode: 'create', data: null });
     const [faqForm, setFaqForm] = useState({ question: '', answer: '', category: '' });
+    const [confirmationModal, setConfirmationModal] = useState({ open: false, title: '', message: '', onConfirm: () => { } });
 
     // Components for Tabs
     const OverviewTab = () => (
@@ -191,7 +192,7 @@ const AdminDashboard = () => {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{new Date(ticket.createdAt).toLocaleDateString()}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{ticket.user.name} ({ticket.user.role})</td>
                                 <td className="px-6 py-4 text-sm text-slate-900 max-w-xs truncate">{ticket.subject}</td>
-                                <td className="px-6 py-4 whitespace-nowrap"><Badge status={ticket.status === 'OPEN' ? 'warning' : 'success'}>{ticket.status}</Badge></td>
+                                <td className="px-6 py-4 whitespace-nowrap"><Badge status={ticket.status}>{ticket.status}</Badge></td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <button
                                         onClick={() => { setReplyModal({ open: true, ticketId: ticket.id }); setReplyText(''); }}
@@ -235,7 +236,12 @@ const AdminDashboard = () => {
                                 <Edit size={18} />
                             </button>
                             <button
-                                onClick={() => { if (confirm('Delete FAQ?')) deleteFAQMutation.mutate(faq.id); }}
+                                onClick={() => setConfirmationModal({
+                                    open: true,
+                                    title: 'Delete FAQ?',
+                                    message: 'Are you sure you want to delete this FAQ?',
+                                    onConfirm: () => deleteFAQMutation.mutate(faq.id)
+                                })}
                                 className="text-slate-400 hover:text-red-600"
                             >
                                 <Trash2 size={18} />
@@ -276,7 +282,12 @@ const AdminDashboard = () => {
                                     {users.map(u => (
                                         <div key={u.id} className="p-3 border rounded flex justify-between">
                                             <div><p className="font-medium">{u.name}</p><p className="text-sm text-slate-500">{u.email} ({u.role})</p></div>
-                                            <button onClick={() => { if (confirm('Delete?')) deleteUserMutation.mutate(u.id); }} className="text-red-500"><Trash2 size={16} /></button>
+                                            <button onClick={() => setConfirmationModal({
+                                                open: true,
+                                                title: 'Delete User?',
+                                                message: `Are you sure you want to delete ${u.name}? This action cannot be undone.`,
+                                                onConfirm: () => deleteUserMutation.mutate(u.id)
+                                            })} className="text-red-500"><Trash2 size={16} /></button>
                                         </div>
                                     ))}
                                 </div>
@@ -336,6 +347,29 @@ const AdminDashboard = () => {
                     >
                         Save
                     </button>
+                </div>
+            </Modal>
+            {/* Confirmation Modal */}
+            <Modal isOpen={confirmationModal.open} onClose={() => setConfirmationModal({ ...confirmationModal, open: false })} title={confirmationModal.title}>
+                <div className="space-y-4">
+                    <p className="text-slate-600">{confirmationModal.message}</p>
+                    <div className="flex gap-3 justify-end">
+                        <button
+                            onClick={() => setConfirmationModal({ ...confirmationModal, open: false })}
+                            className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => {
+                                confirmationModal.onConfirm();
+                                setConfirmationModal({ ...confirmationModal, open: false });
+                            }}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                        >
+                            Confirm
+                        </button>
+                    </div>
                 </div>
             </Modal>
         </div>

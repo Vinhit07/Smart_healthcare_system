@@ -47,14 +47,7 @@ const SupportPage = () => {
         createMutation.mutate(data);
     };
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'OPEN': return 'warning';
-            case 'IN_PROGRESS': return 'info';
-            case 'CLOSED': return 'success';
-            default: return 'default';
-        }
-    };
+
 
     if (isLoading) return <LoadingSpinner />;
 
@@ -91,7 +84,7 @@ const SupportPage = () => {
                                     <h3 className="text-lg font-semibold text-slate-900">{ticket.subject}</h3>
                                     <p className="text-sm text-slate-500">Created on {new Date(ticket.createdAt).toLocaleDateString()}</p>
                                 </div>
-                                <Badge variant={getStatusColor(ticket.status)}>{ticket.status.replace('_', ' ')}</Badge>
+                                <Badge status={ticket.status}>{ticket.status.replace('_', ' ')}</Badge>
                             </div>
                             <div className="bg-slate-50 p-4 rounded-lg mb-4">
                                 <p className="text-slate-700">{ticket.message}</p>

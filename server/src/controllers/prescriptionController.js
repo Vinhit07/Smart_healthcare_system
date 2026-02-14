@@ -121,6 +121,11 @@ const getMyPrescriptions = async (req, res) => {
 
         // Verify user is a patient
         const user = await prisma.user.findUnique({ where: { id: patientId } });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
         if (user.role !== 'PATIENT') {
             return res.status(403).json({ error: 'Only patients can view their prescriptions' });
         }

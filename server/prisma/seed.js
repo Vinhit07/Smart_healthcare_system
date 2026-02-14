@@ -354,11 +354,6 @@ async function main() {
             question: "Can I add family members to my account?",
             answer: "Currently, each adult must have their own account. We are working on a family profile feature for future updates.",
             category: "Account"
-        },
-        {
-            question: "What payment methods are accepted?",
-            answer: "We accept major credit/debit cards and select digital wallets for paid consultations.",
-            category: "Payments"
         }
     ];
 
@@ -367,7 +362,42 @@ async function main() {
     }
     console.log('✅ Created 10 FAQs');
 
+    // Seed Support Tickets
+    const tickets = [
+        {
+            userId: patient1.id,
+            subject: "Appointment Cancellation Issue",
+            message: "I tried to cancel my appointment but received an error message. Please assist.",
+            status: "OPEN"
+        },
+        {
+            userId: patient1.id,
+            subject: "Prescription Renewal",
+            message: "How can I request a renewal for my current prescription without a new appointment?",
+            status: "CLOSED",
+            response: "You can request a renewal directly from the Prescriptions tab. If not available, please book a short consultation."
+        },
+        {
+            userId: patient2.id,
+            subject: "Update Profile Information",
+            message: "I need to update my insurance details in my profile.",
+            status: "IN_PROGRESS"
+        },
+        {
+            userId: patient2.id,
+            subject: "Login Issues on Mobile",
+            message: "I am unable to login to the mobile app with my credentials.",
+            status: "OPEN"
+        }
+    ];
+
+    for (const ticket of tickets) {
+        await prisma.supportTicket.create({ data: ticket });
+    }
+    console.log('✅ Created 4 support tickets');
 }
+
+
 
 main()
     .catch((e) => {

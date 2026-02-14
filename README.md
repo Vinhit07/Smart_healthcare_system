@@ -9,7 +9,7 @@ A complete, production-ready web-based healthcare platform with AI-powered featu
 | **Frontend** | React 18 + Vite + TailwindCSS |
 | **Backend** | Express.js + Node.js |
 | **Database** | PostgreSQL (Supabase) + Prisma ORM |
-| **AI/ML** | Grok API (xAI) |
+| **AI/ML** | Groq API |
 | **Authentication** | JWT + bcryptjs |
 | **State Management** | Zustand + React Query |
 
@@ -17,7 +17,7 @@ A complete, production-ready web-based healthcare platform with AI-powered featu
 
 - Node.js 18+ and npm
 - Supabase account (for PostgreSQL database)
-- Grok API key from xAI
+- Groq API key from xAI
 - Git
 
 ## 🚀 Quick Start
@@ -46,15 +46,15 @@ DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public"
 JWT_SECRET=your_super_secret_jwt_key_min_32_characters
 JWT_EXPIRES_IN=7d
 
-# Grok AI
-GROK_API_KEY=your_grok_api_key_here
-GROK_API_URL=https://api.x.ai/v1
+# Groq AI
+GROQ_API_KEY=your_grok_api_key_here
+GROQ_API_URL=https://api.x.ai/v1
 
 # Server
 PORT=5000
 CLIENT_URL=http://localhost:5173
 
-# Supabase (optional, for file storage)
+# Supabase
 SUPABASE_URL=your_supabase_project_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
@@ -63,13 +63,7 @@ Run Prisma migrations:
 
 ```bash
 npx prisma generate
-npx prisma migrate dev --name init
-```
 
-Seed the database:
-
-```bash
-node prisma/seed.js
 ```
 
 Start the backend:
@@ -249,16 +243,6 @@ smart-healthcare/
 - ✅ Breakpoints: sm (640px), md (768px), lg (1024px+)
 - ✅ Tested on mobile, tablet, and desktop
 
-## 🧪 Database Schema
-
-### Models
-- **User** - Base user with role (PATIENT, DOCTOR, ADMIN)
-- **DoctorProfile** - Doctor-specific data (specialization, availability, rating)
-- **PatientProfile** - Patient medical history
-- **Appointment** - Appointment bookings with status tracking
-- **Prescription** - Medication prescriptions with auto-calculated days remaining
-- **SymptomLog** - AI disease prediction history
-- **ChatSession** - AI chatbot conversation history
 
 ## 📝 Environment Variables
 
@@ -279,22 +263,6 @@ SUPABASE_ANON_KEY=     # Supabase anon key (optional)
 ```env
 VITE_API_URL=          # Backend API URL (e.g., http://localhost:5000/api)
 ```
-
-## 🚀 Deployment Checklist
-
-- [ ] Change all default passwords
-- [ ] Set strong JWT_SECRET (32+ characters)
-- [ ] Configure production DATABASE_URL
-- [ ] Obtain and set GROK_API_KEY
-- [ ] Update CLIENT_URL to production domain
-- [ ] Update VITE_API_URL to production backend
-- [ ] Run Prisma migrations on production database
-- [ ] Seed database (optional)
-- [ ] Set up SSL/HTTPS
-- [ ] Configure rate limiting for production
-- [ ] Test all AI features with disclaimers
-- [ ] Verify mobile responsiveness
-- [ ] Enable error logging/monitoring
 
 ## 🐛 Troubleshooting
 
