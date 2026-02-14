@@ -165,3 +165,23 @@ export const faqService = {
         return response.data;
     },
 };
+
+export const analyticsService = {
+    getAnalytics: async () => {
+        const response = await api.get('/analytics');
+        return response.data;
+    }
+};
+
+export const reviewService = {
+    createReview: async (reviewData) => {
+        const response = await api.post('/reviews', reviewData);
+        return response.data;
+    },
+    getDoctorReviews: async (doctorId) => {
+        const response = await api.get(`/reviews/doctor/${doctorId}`);
+        return response.data;
+    }
+};
+
+

@@ -6,7 +6,8 @@ import Navbar from '../../components/Navbar';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import Badge from '../../components/Badge';
 import Modal from '../../components/Modal';
-import { userService, doctorService, appointmentService, ticketService, faqService } from '../../services';
+import { userService, doctorService, appointmentService, ticketService, faqService, analyticsService } from '../../services';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useForm } from 'react-hook-form';
 
 const AdminDashboard = () => {
@@ -18,6 +19,7 @@ const AdminDashboard = () => {
     const { data: appointmentsData, isLoading: appointmentsLoading } = useQuery({ queryKey: ['allAppointments'], queryFn: appointmentService.getAllAppointments });
     const { data: ticketsData, isLoading: ticketsLoading } = useQuery({ queryKey: ['allTickets'], queryFn: ticketService.getAllTickets });
     const { data: faqsData, isLoading: faqsLoading } = useQuery({ queryKey: ['faqs'], queryFn: () => faqService.getAllFAQs().then(res => res.faqs) });
+    const { data: analyticsData, isLoading: analyticsLoading } = useQuery({ queryKey: ['analytics'], queryFn: analyticsService.getAnalytics });
 
     const users = usersData?.users || [];
     const appointments = appointmentsData?.appointments || [];
@@ -260,7 +262,7 @@ const AdminDashboard = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
                     <div className="flex border-b border-slate-200 overflow-x-auto">
-                        {['overview', 'users', 'appointments', 'tickets', 'faqs'].map(tab => (
+                        {['overview', 'users', 'appointments', 'tickets', 'faqs', 'analytics'].map(tab => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
@@ -296,6 +298,85 @@ const AdminDashboard = () => {
                         {activeTab === 'appointments' && <AppointmentsTab />}
                         {activeTab === 'tickets' && <TicketsTab />}
                         {activeTab === 'faqs' && <FAQTab />}
+                        {activeTab === 'analytics' && !analyticsLoading && analyticsData && (
+                            <div className="space-y-6">
+                                <div className="card">
+                                    <h2 className="text-xl font-bold mb-4">Appointments Trend (Last 30 Days)</h2>
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <LineChart data={analyticsData.appointmentsByDate}>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="date" />
+                                            <YAxis />
+                                            <Tooltip />
+                                            <Legend />
+                                            <Line type="monotone" dataKey="count" stroke="#4f46e5" name="Total" />
+                                            <Line type="monotone" dataKey="completed" stroke="#10b981" name="Completed" />
+                                            <Line type="monotone" dataKey="cancelled" stroke="#ef4444" name="Cancelled" />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div className="card">
+                                        <h2 className="text-xl font-bold mb-4">Top Symptoms</h2>
+                                        <ResponsiveContainer width="100%" height={300}>
+                                            <BarChart data={analyticsData.symptomDistribution}>
+                                                <CartesianGrid strokeDasharray="3 3" />
+                                                <XAxis dataKey="symptom" angle={-45} textAnchor="end" height={100} />
+                                                <YAxis />
+                                                <Tooltip />
+                                                <Bar dataKey="count" fill="#14b8a6" />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+
+                                    <div className="card">
+                                        <h2 className="text-xl font-bold mb-4">Doctor Utilization</h2>
+                                        <ResponsiveContainer width="100%" height={300}>
+                                            <BarChart data={analyticsData.doctorUtilization.slice(0, 5)} layout="vertical">
+                                                <CartesianGrid strokeDasharray="3 3" />
+                                                <XAxis type="number" />
+                                                <YAxis dataKey="name" type="category" width={100} />
+                                                <Tooltip />
+                                                <Bar dataKey="appointmentCount" fill="#6366f1" />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+
+                                <div className="card">
+                                    <h2 className="text-xl font-bold mb-4">Patient Growth</h2>
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <LineChart data={analyticsData.patientGrowth}>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="month" />
+                                            <YAxis />
+                                            <Tooltip />
+                                            <Line type="monotone" dataKey="count" stroke="#8b5cf6" strokeWidth={2} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div className="card bg-gradient-to-br from-indigo-500 to-indigo-600 text-white">
+                                        <p className="text-sm opacity-90">Total Appointments</p>
+                                        <p className="text-3xl font-bold mt-2">{analyticsData.summary.totalAppointments}</p>
+                                    </div>
+                                    <div className="card bg-gradient-to-br from-teal-500 to-teal-600 text-white">
+                                        <p className="text-sm opacity-90">Total Patients</p>
+                                        <p className="text-3xl font-bold mt-2">{analyticsData.summary.totalPatients}</p>
+                                    </div>
+                                    <div className="card bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                                        <p className="text-sm opacity-90">Total Doctors</p>
+                                        <p className="text-3xl font-bold mt-2">{analyticsData.summary.totalDoctors}</p>
+                                    </div>
+                                    <div className="card bg-gradient-to-br from-amber-500 to-amber-600 text-white">
+                                        <p className="text-sm opacity-90">Symptom Logs</p>
+                                        <p className="text-3xl font-bold mt-2">{analyticsData.summary.totalSymptomLogs}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </>
                 )}
             </div>

@@ -13,6 +13,8 @@ const prescriptionRoutes = require('./routes/prescriptionRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
 const faqRoutes = require('./routes/faqRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
 
 // Import middleware
 const { apiLimiter } = require('./middleware/rateLimitMiddleware');
@@ -52,6 +54,8 @@ app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/faqs', faqRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

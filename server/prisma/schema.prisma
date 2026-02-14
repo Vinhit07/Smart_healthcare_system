@@ -47,6 +47,10 @@ model User {
   chatSessions         ChatSession[]
   supportTickets       SupportTicket[]
 
+  // Review relations
+  doctorReviews  Review[] @relation("DoctorReviews")
+  patientReviews Review[] @relation("PatientReviews")
+
   @@map("users")
 }
 
@@ -97,6 +101,7 @@ model Appointment {
   patient       User           @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
   doctor        User           @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Cascade)
   prescriptions Prescription[]
+  review        Review?
 
   @@index([patientId])
   @@index([doctorId])
@@ -182,3 +187,24 @@ model FAQ {
 
   @@map("faqs")
 }
+
+model Review {
+  id            String   @id @default(uuid())
+  doctorId      String
+  patientId     String
+  appointmentId String   @unique
+  rating        Int      // 1-5
+  comment       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  doctor      User        @relation("DoctorReviews", fields: [doctorId], references: [id], onDelete: Cascade)
+  patient     User        @relation("PatientReviews", fields: [patientId], references: [id], onDelete: Cascade)
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([doctorId])
+  @@index([patientId])
+  @@index([appointmentId])
+  @@map("reviews")
+}
+
