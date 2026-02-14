@@ -4,8 +4,8 @@ import { format } from 'date-fns';
 import Navbar from '../../components/Navbar';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { prescriptionService } from '../../services';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const PrescriptionsPage = () => {
     const { data, isLoading } = useQuery({
@@ -14,6 +14,51 @@ const PrescriptionsPage = () => {
     });
 
     const prescriptions = data?.prescriptions || [];
+
+    const generateAllPrescriptionsPDF = () => {
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFontSize(22);
+        doc.setTextColor(79, 70, 229); // indigo-600
+        doc.text('Smart Healthcare', 105, 20, { align: 'center' });
+
+        doc.setFontSize(14);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Comprehensive Medication History', 105, 30, { align: 'center' });
+
+        // Patient Info
+        const patientName = prescriptions[0]?.patient?.name || 'Patient';
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Patient: ${patientName}`, 14, 45);
+        doc.text(`Generated: ${format(new Date(), 'MMM dd, yyyy')}`, 14, 52);
+
+        // Table Data
+        const tableBody = prescriptions.map(p => [
+            p.medicationName,
+            `Dr. ${p.doctor.name} (${p.doctor.doctorProfile?.specialization || 'General'})`,
+            `${p.dosage}\n${p.frequency}`,
+            `${format(new Date(p.startDate), 'MMM dd, yyyy')}\nto\n${format(new Date(p.endDate), 'MMM dd, yyyy')}`,
+            p.status === 'ACTIVE' ? 'Active' : 'Completed'
+        ]);
+
+        autoTable(doc, {
+            startY: 60,
+            head: [['Medication', 'Prescribed By', 'Dosage & Freq', 'Duration', 'Status']],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: { fillColor: [79, 70, 229], textColor: 255 },
+            styles: { fontSize: 9, cellPadding: 3 },
+            columnStyles: {
+                0: { fontStyle: 'bold' },
+                2: { cellWidth: 35 },
+                3: { cellWidth: 35 }
+            }
+        });
+
+        doc.save(`medication_history_${patientName.replace(/\s+/g, '_')}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    };
 
     const getUrgencyColor = (daysLeft) => {
         if (daysLeft < 3) return 'bg-red-500';
@@ -100,9 +145,20 @@ const PrescriptionsPage = () => {
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex items-center justify-between mb-8">
                     <h1 className="text-3xl font-bold text-slate-900">My Prescriptions</h1>
-                    <div className="flex items-center space-x-2 text-sm text-slate-600">
-                        <Pill className="h-5 w-5" />
-                        <span>{prescriptions.length} total prescriptions</span>
+                    <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2 text-sm text-slate-600">
+                            <Pill className="h-5 w-5" />
+                            <span>{prescriptions.length} total prescriptions</span>
+                        </div>
+                        {prescriptions.length > 0 && (
+                            <button
+                                onClick={generateAllPrescriptionsPDF}
+                                className="flex items-center space-x-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm"
+                            >
+                                <Download size={16} />
+                                <span>Download History</span>
+                            </button>
+                        )}
                     </div>
                 </div>
 

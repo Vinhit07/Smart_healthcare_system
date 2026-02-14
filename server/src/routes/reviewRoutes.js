@@ -5,7 +5,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 
 // Create review (Patient only)
-router.post('/', authMiddleware, roleMiddleware(['PATIENT']), createReview);
+router.post('/', authMiddleware, roleMiddleware('PATIENT'), createReview);
 
 // Get doctor reviews (Public)  
 router.get('/doctor/:doctorId', getDoctorReviews);

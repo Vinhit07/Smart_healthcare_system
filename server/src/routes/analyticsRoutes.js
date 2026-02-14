@@ -5,6 +5,6 @@ const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 
 // Admin only route
-router.get('/', authMiddleware, roleMiddleware(['ADMIN']), getAnalytics);
+router.get('/', authMiddleware, roleMiddleware('ADMIN'), getAnalytics);
 
 module.exports = router;
