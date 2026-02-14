@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { Pill, AlertCircle } from 'lucide-react';
+import { Pill, AlertCircle, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import Navbar from '../../components/Navbar';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { prescriptionService } from '../../services';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 const PrescriptionsPage = () => {
     const { data, isLoading } = useQuery({
@@ -23,6 +25,73 @@ const PrescriptionsPage = () => {
         if (daysLeft < 3) return 'text-red-600';
         if (daysLeft < 7) return 'text-amber-600';
         return 'text-green-600';
+    };
+
+    const generatePrescriptionPDF = (prescription) => {
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFontSize(20);
+        doc.setTextColor(79, 70, 229); // indigo-600
+        doc.text('Smart Healthcare', 105, 20, { align: 'center' });
+
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Medical Prescription', 105, 28, { align: 'center' });
+
+        // Line separator
+        doc.setDrawColor(200, 200, 200);
+        doc.line(20, 35, 190, 35);
+
+        // Doctor Information
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text('Prescribed by:', 20, 45);
+        doc.setFontSize(10);
+        doc.text(`Dr. ${prescription.doctor.name}`, 20, 52);
+        doc.text(`${prescription.doctor.doctorProfile?.specialization || 'General Practice'}`, 20, 58);
+
+        // Date
+        doc.text(`Date: ${format(new Date(prescription.createdAt || prescription.startDate), 'MMM dd, yyyy')}`, 20, 70);
+
+        // Patient Information (if available)
+        doc.setFontSize(12);
+        doc.text('Patient:', 120, 45);
+        doc.setFontSize(10);
+        doc.text(`${prescription.patient?.name || 'Patient'}`, 120, 52);
+
+        // Line separator
+        doc.line(20, 78, 190, 78);
+
+        // Prescription Details
+        doc.setFontSize(14);
+        doc.setTextColor(79, 70, 229);
+        doc.text('Rx', 20, 90);
+
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Medication: ${prescription.medicationName}`, 20, 100);
+
+        doc.setFontSize(10);
+        doc.text(`Dosage: ${prescription.dosage}`, 20, 108);
+        doc.text(`Frequency: ${prescription.frequency}`, 20, 116);
+        doc.text(`Duration: ${format(new Date(prescription.startDate), 'MMM dd, yyyy')} to ${format(new Date(prescription.endDate), 'MMM dd, yyyy')}`, 20, 124);
+
+        if (prescription.notes) {
+            doc.setFontSize(11);
+            doc.text('Instructions:', 20, 135);
+            doc.setFontSize(9);
+            const splitNotes = doc.splitTextToSize(prescription.notes, 170);
+            doc.text(splitNotes, 20, 142);
+        }
+
+        // Footer
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text('This is a digitally generated prescription. Please show this at the pharmacy.', 105, 280, { align: 'center' });
+
+        // Save
+        doc.save(`prescription-${prescription.medicationName.replace(/\s+/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
     };
 
     return (
@@ -114,6 +183,15 @@ const PrescriptionsPage = () => {
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Download PDF Button */}
+                                <button
+                                    onClick={() => generatePrescriptionPDF(prescription)}
+                                    className="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition"
+                                >
+                                    <Download size={18} />
+                                    Download PDF
+                                </button>
                             </div>
                         ))}
                     </div>
